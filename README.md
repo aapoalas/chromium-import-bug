@@ -1,5 +1,7 @@
 ## Demo for Chrome stalling requests when results arrive in surprising order
 
+Chromium bug found here: https://bugs.chromium.org/p/chromium/issues/detail?id=1169568
+
 This repository contains a demo of an apparent bug in Google Chrome (Chromium not verified) related to importing of an ECMASCript module with a large web of dependencies, sometimes interconnecting, hidden behind it.
 Importing such a file should cause Chrome no issues, it should simply download all dependencies, scan them for more dependencies and keep loading until no more are found. After that the module should being executing.
 
