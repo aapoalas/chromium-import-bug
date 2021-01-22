@@ -22,7 +22,14 @@ self.addEventListener("sync", event =>
             caches.delete(RESOURCES),
         ])
     )
-)
+);
+
+self.addEventListener("message", event => 
+    event.waitUntil([
+        clients.claim(),
+        caches.delete(RESOURCES),
+    ])
+);
 
 const base64Fixer = c => c.charCodeAt(0);
 

@@ -69,9 +69,20 @@ const loadingStylesheets = new Map();
 const getRuleForUrl = (stylesheetUrl) =>
     `@import url("${stylesheetUrl}");`;
 
+const manuallyCheckResolves = () =>
+    setTimeout(() => {
+        if (loadingStylesheets.size > 0) {
+            resolveImportPromise();
+            if (loadingStylesheets.size > 0) {
+                manuallyCheckResolves();
+            }
+        }
+    }, 300);
+
 const commitStylesheet = (stylesheetUrl) => {
     importSheet.insertRule(getRuleForUrl(stylesheetUrl));
     importedStylesheets.add(stylesheetUrl);
+    manuallyCheckResolves();
     return new Promise(res => {
         const timeoutId = setTimeout(() => revertStylesheet(stylesheetUrl), 10000);
         loadingStylesheets.set(stylesheetUrl, () => {
@@ -93,15 +104,7 @@ const resolveImportPromise = () => {
             cssRule.styleSheet instanceof CSSStyleSheet
     );
     for (const cssRule of importedStylesheetUrls) {
-        try {
-            // The cssRules access should throw an error if the stylesheet load
-            // has failed. Otherwise the access should work without issue.
-            cssRule.styleSheet.cssRules;
-        } catch (_err) {
-            // Even on import error simply resolve the Promise: A stylesheet load
-            // failure is not worthy of a throw.
-            throw new Error("timeout");
-        }
+        cssRule.styleSheet.cssRules;
         const resolveFunction = loadingStylesheets.get(cssRule.href);
         resolveFunction();
     }
@@ -186,7 +189,11 @@ window.addStylesheet = addStylesheet;
 const main = async () => {
     const registration = await navigator.serviceWorker.register("./worker.js");
     await navigator.serviceWorker.ready;
-    await registration.sync.register("sync");
+    if ("sync" in registration) {
+        await registration.sync.register("sync");
+    } else {
+        await registration.active.postMessage("sync");
+    }
 
     const loadButton = document.querySelector(".load-button");
     loadButton.addEventListener("click", async () => {
@@ -197,7 +204,7 @@ const main = async () => {
             throw err;
         });
         const promises = stylesheets.map(addStylesheet);
-        await Promise.all(promises);
+        await Promise.all(promises).catch(err => { /* disregard */ });
         const { default: { data: data2 }} = await load("/entries/myProvidedData.js");
     
         const dataEl = document.createElement("div");
