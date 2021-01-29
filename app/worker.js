@@ -6,12 +6,7 @@ self.addEventListener("install", event => event.waitUntil(
         self.skipWaiting(),
         caches.delete(STATIC),
         caches.delete(RESOURCES),
-    ]).then(() => Promise.all([
-        caches.open(STATIC).then(cache => cache.addAll([
-            "/main.js",
-            "/index.html",
-        ])),
-    ]))));
+    ])));
 
 self.addEventListener("activate", event => event.waitUntil(clients.claim()));
 
