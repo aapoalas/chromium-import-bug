@@ -6,7 +6,9 @@ self.addEventListener("install", event => event.waitUntil(
         self.skipWaiting(),
         caches.delete(STATIC),
         caches.delete(RESOURCES),
-    ])));
+    ]).then(() => caches.open(STATIC)).then(cache => cache.add(
+        "./main.js",
+    ))));
 
 self.addEventListener("activate", event => event.waitUntil(clients.claim()));
 
@@ -68,7 +70,7 @@ const handleEntryRequest = async event => {
     } else if (nextDot !== -1) {
         endIndex = nextDot;
     }
-    const response = await fetch(`${base.substring(0, endIndex).replace("/entries/", "/resources/")}.json`);
+    const response = await fetch(`${base.substring(0, endIndex).replace("/entries/", "./resources/")}.json`);
     const data = await response.json();
     for (const requestUrl in data) {
         const contentType = requestUrl.endsWith(".css") ? "text/css" : "application/javascript";
